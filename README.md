@@ -1,1 +1,1 @@
-# eating-snake
+# my small games
