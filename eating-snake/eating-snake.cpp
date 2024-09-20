@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <stdlib.h>
 #include <ctime>
 #include <conio.h>
@@ -13,13 +13,14 @@ struct eatingSnake
     int x,y;  //位置
 }snake[225];
 
-bool running = true;  //控制游戏是否继续运行
+bool running = true,err =false;  //控制游戏是否继续运行
 bool over = false,win = false;  //判断游戏胜负
 int mapLength;  //地图大小
 int map[17][17];  //地图
 int snakeSpeed;  //游戏速度设置
 int snakeLength;  //蛇的长度
 int foodX,foodY;  //食物的位置
+int score;  //游戏得分
 
 void Draw();  //绘制游戏区域
 void Logic();  //处理游戏逻辑
@@ -34,8 +35,8 @@ int main()
         system("cls");
         Setting();
         Draw();
-        _sleep(snakeSpeed);
-        while(!over && !win)
+        _sleep(snakeSpeed * 2);
+        while(!over && !win && !err)
         {
             Logic();
             Draw();
@@ -50,7 +51,8 @@ void Setting()
 {
     int choice; 
 
-    over = win = false;
+    over = win = err = false;
+    score = 100;  //初始得分
 
     //设置地图大小
     cout << "请选择地图大小...\n1:小 2:中 3:大\n";
@@ -67,7 +69,7 @@ void Setting()
             mapLength = 15;
             break;
         default:
-            over = true;
+            err = true;
             return;
     }
 
@@ -92,7 +94,7 @@ void Setting()
             snakeSpeed = 0;
             break;
         default:
-            over = true;
+            err = true;
             return;
     }
     
@@ -152,10 +154,14 @@ void Draw()
             }
         cout << endl;
     }
+    
+    //显示分数
+    cout << score;
 }
 
 void Logic()
 {
+    score -= 1; //减分
     int dir = snake[snakeLength-1].dir;
     //蛇身移动方向更新
     for(int i = snakeLength - 1;i > 0;i--)
@@ -166,8 +172,8 @@ void Logic()
     {
         if(kbhit())
         {
-            getch();
-            key = getch();
+            if(getch() == 224)
+                key = getch();
         }
     }
     switch (key)
@@ -235,6 +241,18 @@ void Logic()
     if(snake[0].x == foodX && snake[0].y == foodY)
     {
         snakeLength++;
+        score += 25;  //加分
+        if(snakeLength == mapLength * mapLength)  //判断是否胜利
+        {
+            win = true;
+            for(int i = 1;i <= mapLength;i++)
+                for(int j = 1;j <= mapLength;j++)
+                    map[i][j] = 1;
+            map[snake[0].x][snake[0].y] = 2;
+            for(int i = 1;i < snakeLength;i++)
+                map[snake[i].x][snake[i].y] = 3; //更新地图
+            return;
+        }
         switch (snake[snakeLength-2].dir)
         {
         case 1:
@@ -281,14 +299,23 @@ void Food()
 
 void Settlement()
 {
-    if(over)
-        cout << "游戏结束！\n";
-    else 
-        cout << "你胜利了！\n";
+    if(err)
+    {
+        system("cls");
+        cout << "游戏出错！\n";
+    }
+    else
+    {
+        if(over)
+            cout << "游戏结束！\n";
+        else 
+            cout << "你胜利了！\n";
+        cout << "你的得分是：" << score << endl;
+    }
     cout << "你是否想再来一局(y/N):";
     char again[10];
-    cin.ignore();
-    cin.clear();  //清除输入缓缓存区
+    rewind(stdin);
+    cin.clear();  //清除输入缓存区
     cin.getline(again,10);
     if(again[0] != 'y' && again[0] != 'Y')
         running = false;
